@@ -2,7 +2,6 @@
 const router = require('express').Router();
 const db = require('./projects-model');
 
-const projects = [];
 
 router.get('/', (req, res) => {
     db.get().then((data) => {
@@ -12,9 +11,22 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
     let id = req.params.id;
     db.get(id).then((data) => {
-        res.status(200).json(data);
+        res.status(data?200:404).json(data);
     })
 });
+
+router.get('/:id/actions', (req, res) => {
+    let id=req.params.id;
+    db.get(id).then((data) => {
+        console.log(data);
+        if(data){
+            res.status(200).json(data.actions);
+        }else {
+            res.status(404).json();
+        }
+    })
+    .catch((err) => res.status(404));
+})
 
 router.post('/', (req, res) => {
     const {name, description, completed} = req.body;
@@ -35,23 +47,17 @@ router.put('/:id', (req, res) => {
         res.status(400).json();
     }
 
-    db.get(id)
-        .then((data) => {
-            if(data) {
-                if(name) data.name=name;
-                if(description) data.description=description;
-                if(completed != undefined) data.completed=completed;
-                db.update(id, data)
-                    .then(res.status(200).json(data))
-                    .catch((err) => console.log(err));
-            } else {
-                res.status(404).json();
-            }
-        })
+    db.update(id, req.body)
+        .then((data) => data?res.status(200).json(data):res.status(404).json(data))
+        .catch((err) => res.status(404));
 });
 
 router.delete('/:id', (req, res) => {
-
+    let id=req.params.id;
+    db.remove(id)
+        .then((data) => {
+            res.status(data?200:404).json();
+        })
 })
 
 module.exports = router;
