@@ -1,34 +1,57 @@
 // Write your "projects" router here!
-const express = require('express');
-const server = express();
-server.use(express.json());
-const router = express.Router();
-
+const router = require('express').Router();
 const db = require('./projects-model');
 
 const projects = [];
 
 router.get('/', (req, res) => {
-    console.log("about to get data");
-    db.get(projects).then((data) => {
-        res.status(200).json(data?data:[]);
+    db.get().then((data) => {
+        res.status(200).json(data);
     });
-    console.log("should still be getting data");
+});
+router.get('/:id', (req, res) => {
+    let id = req.params.id;
+    db.get(id).then((data) => {
+        res.status(200).json(data);
+    })
 });
 
 router.post('/', (req, res) => {
-    console.log(req);
-    let projName = req.body.name;
-    let projDesc = req.body.description;
-    let projCompleted = req.body.completed;
+    const {name, description, completed} = req.body;
 
-    if(!projName || !projDesc || !projCompleted) {
-        res.statusCode(400);
+    if(!name || !description || !completed) {
+        res.status(400).data(req);
     }
-    let proj= {name:projName,desc:projDesc,completed:projCompleted};
+    let proj= {name:name,description:description,completed:completed};
     db.insert(proj).then((data) => {
         res.status(200).json(data);
     })
 });
+
+router.put('/:id', (req, res) => {
+    let id = req.params.id;
+    const{name, description, completed} = req.body;
+    if(!name || !description || completed==undefined) {
+        res.status(400).json();
+    }
+
+    db.get(id)
+        .then((data) => {
+            if(data) {
+                if(name) data.name=name;
+                if(description) data.description=description;
+                if(completed != undefined) data.completed=completed;
+                db.update(id, data)
+                    .then(res.status(200).json(data))
+                    .catch((err) => console.log(err));
+            } else {
+                res.status(404).json();
+            }
+        })
+});
+
+router.delete('/:id', (req, res) => {
+
+})
 
 module.exports = router;
