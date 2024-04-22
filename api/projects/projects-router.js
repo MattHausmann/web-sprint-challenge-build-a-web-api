@@ -39,7 +39,6 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
     let id = req.params.id;
     const{name, description, completed, actions} = req.body;
-    console.log(actions);
     
     if(!name || !description || completed == undefined) {
         res.status(400).json();
